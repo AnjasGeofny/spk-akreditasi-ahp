@@ -28,7 +28,7 @@ export const NAV_ITEMS = [
   { path: '/alternatives', label: 'Alternatif', icon: 'alternatives' },
   { path: '/pairwise', label: 'Perbandingan Kriteria', icon: 'pairwise' },
   { path: '/alt-comparison', label: 'Perbandingan Alternatif', icon: 'altComparison' },
-  { path: '/assessment', label: 'Penilaian', icon: 'assessment' },
+  // { path: '/assessment', label: 'Penilaian', icon: 'assessment' },
   { path: '/ahp-results', label: 'Hasil AHP', icon: 'ahp' },
   { path: '/accreditation', label: 'Hasil Akreditasi', icon: 'accreditation' },
   { path: '/report', label: 'Laporan', icon: 'report' },
