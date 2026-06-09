@@ -1,8 +1,10 @@
 const ahpService = require('../services/ahpService');
 const ahpResultModel = require('../models/ahpResultModel');
 const criteriaModel = require('../models/criteriaModel');
+const subCriteriaModel = require('../models/subCriteriaModel');
 const alternativeModel = require('../models/alternativeModel');
 const pairwiseModel = require('../models/pairwiseModel');
+const subCriteriaComparisonModel = require('../models/subCriteriaComparisonModel');
 const alternativeComparisonModel = require('../models/alternativeComparisonModel');
 const { successResponse } = require('../utils/helpers');
 
@@ -68,6 +70,80 @@ const ahpController = {
         weights_detail: weightsWithNames,
         criteria_names: criteria.map((c) => ({ id: c.id, name: c.name, code: c.code })),
       }, 'Perhitungan AHP kriteria berhasil');
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * Calculate sub-criteria weights for one criteria using AHP
+   */
+  async calculateSubCriteria(req, res, next) {
+    try {
+      const criteria = await criteriaModel.getById(req.params.criteriaId);
+      if (!criteria) {
+        return res.status(404).json({
+          success: false,
+          message: 'Kriteria tidak ditemukan',
+        });
+      }
+
+      const subCriteria = await subCriteriaModel.getAll(criteria.id);
+      if (subCriteria.length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: `Minimal 2 sub-kriteria diperlukan untuk kriteria "${criteria.name}"`,
+        });
+      }
+
+      const subCriteriaIds = subCriteria.map((s) => s.id);
+      const comparisons = await subCriteriaComparisonModel.getMatrix(criteria.id, subCriteriaIds);
+
+      if (comparisons.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Belum ada data perbandingan sub-kriteria untuk kriteria "${criteria.name}"`,
+        });
+      }
+
+      const mappedComparisons = comparisons.map((c) => ({
+        row_id: c.sub_criteria_row_id,
+        col_id: c.sub_criteria_col_id,
+        value: c.value,
+      }));
+
+      const result = ahpService.calculate(mappedComparisons, subCriteriaIds);
+
+      const weightsWithNames = {};
+      subCriteria.forEach((s) => {
+        weightsWithNames[s.id] = {
+          name: s.name,
+          code: s.code,
+          weight: result.weights[s.id],
+        };
+      });
+
+      const saved = await ahpResultModel.save({
+        type: 'sub_criteria',
+        criteria_id: criteria.id,
+        weights: result.weights,
+        lambda_max: result.lambda_max,
+        ci: result.ci,
+        cr: result.cr,
+        is_consistent: result.is_consistent,
+        normalized_matrix: result.normalized_matrix,
+        comparison_matrix: result.comparison_matrix,
+      });
+
+      successResponse(res, {
+        id: saved.id,
+        criteria_id: criteria.id,
+        criteria_name: criteria.name,
+        criteria_code: criteria.code,
+        ...result,
+        weights_detail: weightsWithNames,
+        sub_criteria_names: subCriteria.map((s) => ({ id: s.id, name: s.name, code: s.code })),
+      }, 'Perhitungan AHP sub-kriteria berhasil');
     } catch (error) {
       next(error);
     }

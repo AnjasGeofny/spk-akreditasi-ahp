@@ -32,6 +32,18 @@ export default function AhpResultsPage() {
 
   if (loading) return <Loading />;
 
+  const getResultLabel = (result) => {
+    if (result.type === 'criteria') return 'Kriteria';
+    if (result.type === 'sub_criteria') return `Sub-Kriteria - ${result.criteria_name || ''}`;
+    return `Alternatif - ${result.criteria_name || ''}`;
+  };
+
+  const getDetailTitle = (result) => {
+    if (result.type === 'criteria') return 'Bobot Kriteria';
+    if (result.type === 'sub_criteria') return `Bobot Sub-Kriteria (${result.criteria_name || ''})`;
+    return `Bobot Alternatif (${result.criteria_name || ''})`;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -59,7 +71,7 @@ export default function AhpResultsPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-white capitalize">{r.type === 'criteria' ? 'Kriteria' : `Alternatif — ${r.criteria_name || ''}`}</span>
+                  <span className="text-sm font-medium text-white">{getResultLabel(r)}</span>
                   <span className={`${r.is_consistent ? 'badge-success' : 'badge-danger'}`}>
                     {r.is_consistent ? 'OK' : '!'}
                   </span>
@@ -76,7 +88,7 @@ export default function AhpResultsPage() {
                 {/* Summary */}
                 <div className="glass-card p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">
-                    Detail — {selected.type === 'criteria' ? 'Bobot Kriteria' : `Bobot Alternatif (${selected.criteria_name || ''})`}
+                    Detail - {getDetailTitle(selected)}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="p-3 rounded-xl bg-dark-800/50">

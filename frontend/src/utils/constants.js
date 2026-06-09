@@ -25,6 +25,7 @@ export const CHART_COLORS = [
 export const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: 'dashboard' },
   { path: '/criteria', label: 'Kriteria', icon: 'criteria' },
+  { path: '/sub-criteria', label: 'Sub-Kriteria', icon: 'subCriteria' },
   { path: '/alternatives', label: 'Alternatif', icon: 'alternatives' },
   { path: '/pairwise', label: 'Perbandingan Kriteria', icon: 'pairwise' },
   { path: '/alt-comparison', label: 'Perbandingan Alternatif', icon: 'altComparison' },

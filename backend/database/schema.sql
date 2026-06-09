@@ -8,7 +8,9 @@ DROP TABLE IF EXISTS accreditation_results CASCADE;
 DROP TABLE IF EXISTS ahp_results CASCADE;
 DROP TABLE IF EXISTS assessment_scores CASCADE;
 DROP TABLE IF EXISTS alternative_comparisons CASCADE;
+DROP TABLE IF EXISTS sub_criteria_comparisons CASCADE;
 DROP TABLE IF EXISTS pairwise_comparisons CASCADE;
+DROP TABLE IF EXISTS sub_criteria CASCADE;
 DROP TABLE IF EXISTS alternatives CASCADE;
 DROP TABLE IF EXISTS criteria CASCADE;
 
@@ -26,7 +28,22 @@ CREATE TABLE criteria (
 );
 
 -- ============================================
--- 2. Alternatives Table
+-- 2. Sub Criteria Table
+-- ============================================
+CREATE TABLE sub_criteria (
+    id SERIAL PRIMARY KEY,
+    criteria_id INTEGER NOT NULL REFERENCES criteria(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    description TEXT,
+    order_index INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(criteria_id, code)
+);
+
+-- ============================================
+-- 3. Alternatives Table
 -- ============================================
 CREATE TABLE alternatives (
     id SERIAL PRIMARY KEY,
@@ -38,7 +55,7 @@ CREATE TABLE alternatives (
 );
 
 -- ============================================
--- 3. Pairwise Comparisons (Criteria vs Criteria)
+-- 4. Pairwise Comparisons (Criteria vs Criteria)
 -- ============================================
 CREATE TABLE pairwise_comparisons (
     id SERIAL PRIMARY KEY,
@@ -51,7 +68,21 @@ CREATE TABLE pairwise_comparisons (
 );
 
 -- ============================================
--- 4. Alternative Comparisons (Alt vs Alt per Criteria)
+-- 5. Sub Criteria Comparisons (Sub Criteria vs Sub Criteria per Criteria)
+-- ============================================
+CREATE TABLE sub_criteria_comparisons (
+    id SERIAL PRIMARY KEY,
+    criteria_id INTEGER NOT NULL REFERENCES criteria(id) ON DELETE CASCADE,
+    sub_criteria_row_id INTEGER NOT NULL REFERENCES sub_criteria(id) ON DELETE CASCADE,
+    sub_criteria_col_id INTEGER NOT NULL REFERENCES sub_criteria(id) ON DELETE CASCADE,
+    value DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(criteria_id, sub_criteria_row_id, sub_criteria_col_id)
+);
+
+-- ============================================
+-- 6. Alternative Comparisons (Alt vs Alt per Criteria)
 -- ============================================
 CREATE TABLE alternative_comparisons (
     id SERIAL PRIMARY KEY,
@@ -65,7 +96,7 @@ CREATE TABLE alternative_comparisons (
 );
 
 -- ============================================
--- 5. Assessment Scores
+-- 7. Assessment Scores
 -- ============================================
 CREATE TABLE assessment_scores (
     id SERIAL PRIMARY KEY,
@@ -78,11 +109,11 @@ CREATE TABLE assessment_scores (
 );
 
 -- ============================================
--- 6. AHP Results
+-- 8. AHP Results
 -- ============================================
 CREATE TABLE ahp_results (
     id SERIAL PRIMARY KEY,
-    type VARCHAR(20) NOT NULL CHECK (type IN ('criteria', 'alternative')),
+    type VARCHAR(20) NOT NULL CHECK (type IN ('criteria', 'sub_criteria', 'alternative')),
     criteria_id INTEGER REFERENCES criteria(id) ON DELETE CASCADE,
     weights JSONB NOT NULL,
     lambda_max DOUBLE PRECISION,
@@ -95,7 +126,7 @@ CREATE TABLE ahp_results (
 );
 
 -- ============================================
--- 7. Accreditation Results
+-- 9. Accreditation Results
 -- ============================================
 CREATE TABLE accreditation_results (
     id SERIAL PRIMARY KEY,
@@ -113,6 +144,10 @@ CREATE TABLE accreditation_results (
 -- ============================================
 CREATE INDEX idx_pairwise_row ON pairwise_comparisons(criteria_row_id);
 CREATE INDEX idx_pairwise_col ON pairwise_comparisons(criteria_col_id);
+CREATE INDEX idx_sub_criteria_parent ON sub_criteria(criteria_id);
+CREATE INDEX idx_sub_comp_criteria ON sub_criteria_comparisons(criteria_id);
+CREATE INDEX idx_sub_comp_row ON sub_criteria_comparisons(sub_criteria_row_id);
+CREATE INDEX idx_sub_comp_col ON sub_criteria_comparisons(sub_criteria_col_id);
 CREATE INDEX idx_alt_comp_criteria ON alternative_comparisons(criteria_id);
 CREATE INDEX idx_alt_comp_row ON alternative_comparisons(alternative_row_id);
 CREATE INDEX idx_alt_comp_col ON alternative_comparisons(alternative_col_id);

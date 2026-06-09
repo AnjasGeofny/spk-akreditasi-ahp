@@ -48,6 +48,15 @@ export const criteriaApi = {
   delete: (id) => api.delete(`/criteria/${id}`),
 };
 
+// Sub Criteria
+export const subCriteriaApi = {
+  getAll: (criteriaId) => api.get(criteriaId ? `/sub-criteria?criteria_id=${criteriaId}` : '/sub-criteria'),
+  getById: (id) => api.get(`/sub-criteria/${id}`),
+  create: (data) => api.post('/sub-criteria', data),
+  update: (id, data) => api.put(`/sub-criteria/${id}`, data),
+  delete: (id) => api.delete(`/sub-criteria/${id}`),
+};
+
 // Alternatives
 export const alternativesApi = {
   getAll: () => api.get('/alternatives'),
@@ -62,6 +71,13 @@ export const pairwiseApi = {
   getAll: () => api.get('/pairwise-comparisons'),
   save: (comparisons) => api.post('/pairwise-comparisons', { comparisons }),
   deleteAll: () => api.delete('/pairwise-comparisons'),
+};
+
+// Sub Criteria Comparisons
+export const subCriteriaComparisonApi = {
+  getByCriteria: (criteriaId) => api.get(`/sub-criteria-comparisons/${criteriaId}`),
+  save: (criteriaId, comparisons) => api.post(`/sub-criteria-comparisons/${criteriaId}`, { comparisons }),
+  deleteByCriteria: (criteriaId) => api.delete(`/sub-criteria-comparisons/${criteriaId}`),
 };
 
 // Alternative Comparisons
@@ -80,6 +96,7 @@ export const assessmentApi = {
 // AHP
 export const ahpApi = {
   calculateCriteria: () => api.post('/ahp/calculate-criteria', {}),
+  calculateSubCriteria: (criteriaId) => api.post(`/ahp/calculate-sub-criteria/${criteriaId}`, {}),
   calculateAlternatives: () => api.post('/ahp/calculate-alternatives', {}),
   getResults: () => api.get('/ahp/results'),
   getResultById: (id) => api.get(`/ahp/results/${id}`),
