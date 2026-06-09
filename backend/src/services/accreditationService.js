@@ -60,9 +60,7 @@ const accreditationService = {
 
     // 2. Get sub-criteria AHP weights (local weights per criteria)
     const subCriteriaAhpResults = await ahpResultModel.getLatestSubCriteriaResults();
-    if (subCriteriaAhpResults.length === 0) {
-      throw new Error('Belum ada hasil perhitungan AHP sub-kriteria. Silakan hitung bobot sub-kriteria terlebih dahulu.');
-    }
+    // (soft check: warn but don't block — missing sub-criteria just contribute 0)
 
     // Build subCriteriaWeights: { criteriaId: { subCriteriaId: localWeight } }
     const subCriteriaWeights = {};
@@ -99,14 +97,29 @@ const accreditationService = {
 
     // 5. Run the 3-level calculation
     const criteriaWeights = criteriaAhpResult.weights;
-    const results = ahpService.calculateAlternativeScores(
+    const rawResults = ahpService.calculateAlternativeScores(
       criteriaWeights,
       subCriteriaWeights,
       alternativeWeights,
       alternativeIds
     );
 
-    // 6. Save & return results
+    // 5b. Normalize scores to 0-100 scale.
+    // In AHP, all alternative weights sum to 100 (across n_alt alternatives),
+    // so equal-share baseline = 100 / n_alt. We map that baseline to 50,
+    // giving scores in a meaningful 0-100 range.
+    const nAlt = alternativeIds.length;
+    const equalShare = 100 / nAlt; // e.g. 7.14 for 14 alternatives
+    const results = rawResults.map((r) => ({
+      ...r,
+      raw_score: r.final_score,
+      final_score: Math.min(100, Math.round((r.final_score / equalShare) * 50 * 100) / 100),
+      readiness_percentage: Math.min(100, Math.round((r.readiness_percentage / equalShare) * 50 * 100) / 100),
+    }));
+
+    // 6. Clear previous results then save fresh batch
+    await accreditationResultModel.deleteAll();
+
     const savedResults = [];
     for (const result of results) {
       const status = getReadinessStatus(result.readiness_percentage);

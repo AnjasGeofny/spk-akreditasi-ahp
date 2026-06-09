@@ -11,6 +11,7 @@ export default function AccreditationResultsPage() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
+  const [calcError, setCalcError] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -27,12 +28,15 @@ export default function AccreditationResultsPage() {
 
   const handleCalculate = async (mode) => {
     setCalculating(true);
+    setCalcError(null);
     try {
       await accreditationApi.calculate(mode);
       showNotification('Perhitungan akreditasi berhasil');
       loadData();
     } catch (err) {
-      showNotification(err.message, 'error');
+      const msg = err.response?.data?.message || err.message;
+      setCalcError(msg);
+      showNotification(msg, 'error');
     } finally {
       setCalculating(false);
     }
@@ -56,14 +60,21 @@ export default function AccreditationResultsPage() {
           <p className="text-dark-400 mt-1">Nilai kesiapan dan ranking program studi</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => handleCalculate('without_alternatives')} disabled={calculating} className="btn-secondary" id="calc-without-alt">
-            {calculating ? 'Menghitung...' : 'Hitung Tanpa Alternatif'}
-          </button>
+          {/* Button tanpa alternatif disembunyikan — tidak dibutuhkan */}
+          {/* <button onClick={() => handleCalculate('without_alternatives')} ... /> */}
           <button onClick={() => handleCalculate('with_alternatives')} disabled={calculating} className="btn-primary" id="calc-with-alt">
-            {calculating ? 'Menghitung...' : 'Hitung Dengan Alternatif'}
+            {calculating ? (
+              <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Menghitung...</span>
+            ) : 'Hitung Dengan Alternatif'}
           </button>
         </div>
       </div>
+
+      {calcError && (
+        <div className="glass-card p-4 border border-red-500/30 bg-red-500/10">
+          <p className="text-red-400 text-sm"><span className="font-semibold">Error: </span>{calcError}</p>
+        </div>
+      )}
 
       {results.length === 0 ? (
         <div className="glass-card p-8 text-center text-dark-400">
@@ -155,13 +166,13 @@ export default function AccreditationResultsPage() {
 
           {/* Status Legend */}
           <div className="glass-card p-6">
-            <h3 className="text-sm font-semibold text-dark-300 mb-3">Kategori Status Kesiapan</h3>
+            <h3 className="text-sm font-semibold text-dark-300 mb-3">Kategori Status Kesiapan Akreditasi</h3>
             <div className="flex flex-wrap gap-4">
               {[
-                { range: '85-100', label: 'Sangat Siap', cls: 'badge-success' },
-                { range: '70-84', label: 'Siap', cls: 'badge-info' },
-                { range: '55-69', label: 'Cukup Siap', cls: 'badge-warning' },
-                { range: '<55', label: 'Belum Siap', cls: 'badge-danger' },
+                { range: '70-100', label: 'Sangat Siap', cls: 'badge-success' },
+                { range: '55-69', label: 'Siap', cls: 'badge-info' },
+                { range: '40-54', label: 'Cukup Siap', cls: 'badge-warning' },
+                { range: '<40', label: 'Belum Siap', cls: 'badge-danger' },
               ].map((s) => (
                 <div key={s.label} className="flex items-center gap-2">
                   <span className={s.cls}>{s.label}</span>
@@ -169,6 +180,7 @@ export default function AccreditationResultsPage() {
                 </div>
               ))}
             </div>
+            <p className="text-xs text-dark-500 mt-3">* Skor dinormalisasi dari bobot AHP. Rata-rata program studi ≈ 50.</p>
           </div>
         </>
       )}

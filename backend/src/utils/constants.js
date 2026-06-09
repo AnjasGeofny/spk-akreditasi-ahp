@@ -42,12 +42,16 @@ const CR_THRESHOLD = 0.1;
 
 /**
  * Readiness status categories
+ * NOTE: With AHP alternative ranking, scores sum to 100 across n alternatives.
+ * Equal-share baseline = 100/n_alt. Thresholds below reflect relative performance:
+ *   - Normalized score = (raw_score / equal_share) * 50  maps average→50
+ *   - We use the normalized score stored as readiness_percentage in DB
  */
 const READINESS_STATUS = [
-  { min: 85, max: 100, label: 'Sangat Siap', color: '#10b981' },
-  { min: 70, max: 84.99, label: 'Siap', color: '#3b82f6' },
-  { min: 55, max: 69.99, label: 'Cukup Siap', color: '#f59e0b' },
-  { min: 0, max: 54.99, label: 'Belum Siap', color: '#ef4444' },
+  { min: 70, max: 100, label: 'Sangat Siap', color: '#10b981' },
+  { min: 55, max: 69.99, label: 'Siap', color: '#3b82f6' },
+  { min: 40, max: 54.99, label: 'Cukup Siap', color: '#f59e0b' },
+  { min: 0, max: 39.99, label: 'Belum Siap', color: '#ef4444' },
 ];
 
 /**

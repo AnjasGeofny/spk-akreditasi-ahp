@@ -28,7 +28,8 @@ const accreditationResultModel = {
   },
 
   async getLatestGrouped() {
-    // Get the latest batch (by created_at)
+    // Get the latest batch (by created_at) — use a 10-second window to catch
+    // all rows inserted in the same batch (they may differ by a few ms)
     const latestTime = await pool.query(
       'SELECT created_at FROM accreditation_results ORDER BY created_at DESC LIMIT 1'
     );
@@ -38,7 +39,7 @@ const accreditationResultModel = {
       `SELECT ar.*, a.name as alternative_name, a.code as alternative_code
        FROM accreditation_results ar
        LEFT JOIN alternatives a ON ar.alternative_id = a.id
-       WHERE ar.created_at = $1
+       WHERE ar.created_at >= ($1::timestamptz - INTERVAL '10 seconds')
        ORDER BY ar.final_score DESC`,
       [latestTime.rows[0].created_at]
     );
