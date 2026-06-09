@@ -58,7 +58,7 @@ const pairwiseRules = [
  * Validation rules for alternative comparisons
  */
 const alternativeComparisonRules = [
-  param('criteriaId').isInt({ min: 1 }).withMessage('ID kriteria tidak valid'),
+  param('subCriteriaId').isInt({ min: 1 }).withMessage('ID sub-kriteria tidak valid'),
   body('comparisons').isArray({ min: 1 }).withMessage('Data perbandingan wajib diisi'),
   body('comparisons.*.alternative_row_id').isInt({ min: 1 }).withMessage('ID alternatif baris tidak valid'),
   body('comparisons.*.alternative_col_id').isInt({ min: 1 }).withMessage('ID alternatif kolom tidak valid'),

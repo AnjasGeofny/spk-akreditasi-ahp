@@ -245,30 +245,44 @@ const ahpService = {
   },
 
   /**
-   * Calculate final scores with alternatives
-   * @param {Object} criteriaWeights - {criteriaId: weight}
-   * @param {Object} alternativeWeights - {criteriaId: {alternativeId: weight}}
-   * @param {Array} alternativeIds
+   * Calculate final scores for alternatives using full 3-level AHP hierarchy
+   * Score(A) = Σ_C [ w_C × Σ_SC ( w_SC_local × w_A_SC ) ] × 100
+   *
+   * @param {Object} criteriaWeights      - { criteriaId: weight }
+   * @param {Object} subCriteriaWeights   - { criteriaId: { subCriteriaId: localWeight } }
+   * @param {Object} alternativeWeights   - { subCriteriaId: { alternativeId: weight } }
+   * @param {Array}  alternativeIds
    * @returns {Array} ranked results
    */
-  calculateAlternativeScores(criteriaWeights, alternativeWeights, alternativeIds) {
+  calculateAlternativeScores(criteriaWeights, subCriteriaWeights, alternativeWeights, alternativeIds) {
     const results = [];
 
     for (const altId of alternativeIds) {
       let finalScore = 0;
       const details = [];
 
-      for (const [criteriaId, criteriaWeight] of Object.entries(criteriaWeights)) {
-        const altWeight = alternativeWeights[criteriaId]?.[altId] || 0;
-        const weightedScore = roundTo(criteriaWeight * altWeight * 100, 4);
-        finalScore += weightedScore;
+      for (const [criteriaIdStr, criteriaWeight] of Object.entries(criteriaWeights)) {
+        const criteriaId = parseInt(criteriaIdStr);
+        const subWeights = subCriteriaWeights[criteriaId] || {};
+        let criteriaContribution = 0;
 
-        details.push({
-          criteria_id: parseInt(criteriaId),
-          criteria_weight: roundTo(criteriaWeight, 4),
-          alternative_weight: roundTo(altWeight, 4),
-          weighted_score: roundTo(weightedScore, 4),
-        });
+        for (const [scIdStr, scLocalWeight] of Object.entries(subWeights)) {
+          const scId = parseInt(scIdStr);
+          const altWeight = alternativeWeights[scId]?.[altId] || 0;
+          const contribution = roundTo(criteriaWeight * scLocalWeight * altWeight * 100, 6);
+          criteriaContribution += contribution;
+
+          details.push({
+            criteria_id: criteriaId,
+            sub_criteria_id: scId,
+            criteria_weight: roundTo(criteriaWeight, 4),
+            sub_criteria_local_weight: roundTo(scLocalWeight, 4),
+            alternative_weight: roundTo(altWeight, 4),
+            contribution: roundTo(contribution, 4),
+          });
+        }
+
+        finalScore += criteriaContribution;
       }
 
       results.push({

@@ -11,7 +11,6 @@ const accreditationService = {
    * Calculate accreditation without alternatives
    */
   async calculateWithoutAlternatives() {
-    // Get latest criteria AHP result
     const ahpResult = await ahpResultModel.getLatestCriteriaResult();
     if (!ahpResult) {
       throw new Error('Belum ada hasil perhitungan AHP kriteria. Silakan hitung bobot kriteria terlebih dahulu.');
@@ -20,7 +19,6 @@ const accreditationService = {
       throw new Error('Hasil AHP kriteria tidak konsisten (CR ≥ 0.1). Silakan perbaiki matriks perbandingan.');
     }
 
-    // Get assessment scores (without alternative)
     const scores = await assessmentModel.getWithoutAlternative();
     if (scores.length === 0) {
       throw new Error('Belum ada skor penilaian. Silakan input skor capaian terlebih dahulu.');
@@ -30,7 +28,6 @@ const accreditationService = {
     const result = ahpService.calculateFinalScore(criteriaWeights, scores);
     const status = getReadinessStatus(result.readiness_percentage);
 
-    // Save result
     const saved = await accreditationResultModel.save({
       alternative_id: null,
       final_score: result.final_score,
@@ -48,10 +45,11 @@ const accreditationService = {
   },
 
   /**
-   * Calculate accreditation with alternatives
+   * Calculate accreditation with alternatives using full 3-level AHP:
+   * Score(A) = Σ_C [ w_C × Σ_SC ( w_SC_local × w_A_SC ) ] × 100
    */
   async calculateWithAlternatives() {
-    // Get latest criteria AHP result
+    // 1. Get criteria AHP weights
     const criteriaAhpResult = await ahpResultModel.getLatestCriteriaResult();
     if (!criteriaAhpResult) {
       throw new Error('Belum ada hasil perhitungan AHP kriteria.');
@@ -60,35 +58,55 @@ const accreditationService = {
       throw new Error('Hasil AHP kriteria tidak konsisten (CR ≥ 0.1).');
     }
 
-    // Get latest alternative AHP results
+    // 2. Get sub-criteria AHP weights (local weights per criteria)
+    const subCriteriaAhpResults = await ahpResultModel.getLatestSubCriteriaResults();
+    if (subCriteriaAhpResults.length === 0) {
+      throw new Error('Belum ada hasil perhitungan AHP sub-kriteria. Silakan hitung bobot sub-kriteria terlebih dahulu.');
+    }
+
+    // Build subCriteriaWeights: { criteriaId: { subCriteriaId: localWeight } }
+    const subCriteriaWeights = {};
+    for (const result of subCriteriaAhpResults) {
+      const cId = result.criteria_id;
+      if (!subCriteriaWeights[cId]) subCriteriaWeights[cId] = {};
+      // result.weights = { subCriteriaId: localWeight }
+      for (const [scId, w] of Object.entries(result.weights)) {
+        subCriteriaWeights[cId][parseInt(scId)] = w;
+      }
+    }
+
+    // 3. Get alternative AHP weights (per sub-criteria)
     const altAhpResults = await ahpResultModel.getLatestAlternativeResults();
     if (altAhpResults.length === 0) {
-      throw new Error('Belum ada hasil perhitungan AHP alternatif.');
+      throw new Error('Belum ada hasil perhitungan AHP alternatif per sub-kriteria. Silakan hitung perbandingan alternatif terlebih dahulu.');
     }
 
-    // Check consistency of all alternative results
-    const inconsistent = altAhpResults.filter((r) => !r.is_consistent);
-    if (inconsistent.length > 0) {
-      const names = inconsistent.map((r) => r.criteria_name).join(', ');
-      throw new Error(`AHP alternatif tidak konsisten untuk kriteria: ${names}`);
+    const inconsistentAlt = altAhpResults.filter((r) => !r.is_consistent);
+    if (inconsistentAlt.length > 0) {
+      const names = inconsistentAlt.map((r) => r.sub_criteria_name || r.sub_criteria_code).join(', ');
+      throw new Error(`AHP alternatif tidak konsisten untuk sub-kriteria: ${names}`);
     }
 
-    const criteriaWeights = criteriaAhpResult.weights;
+    // Build alternativeWeights: { subCriteriaId: { alternativeId: weight } }
     const alternativeWeights = {};
     for (const result of altAhpResults) {
-      alternativeWeights[result.criteria_id] = result.weights;
+      alternativeWeights[result.sub_criteria_id] = result.weights;
     }
 
+    // 4. Get all alternatives
     const alternatives = await alternativeModel.getAll();
     const alternativeIds = alternatives.map((a) => a.id);
 
+    // 5. Run the 3-level calculation
+    const criteriaWeights = criteriaAhpResult.weights;
     const results = ahpService.calculateAlternativeScores(
       criteriaWeights,
+      subCriteriaWeights,
       alternativeWeights,
       alternativeIds
     );
 
-    // Save results
+    // 6. Save & return results
     const savedResults = [];
     for (const result of results) {
       const status = getReadinessStatus(result.readiness_percentage);

@@ -80,11 +80,11 @@ export const subCriteriaComparisonApi = {
   deleteByCriteria: (criteriaId) => api.delete(`/sub-criteria-comparisons/${criteriaId}`),
 };
 
-// Alternative Comparisons
+// Alternative Comparisons (per Sub-Criteria)
 export const altComparisonApi = {
-  getByCriteria: (criteriaId) => api.get(`/alternative-comparisons/${criteriaId}`),
-  save: (criteriaId, comparisons) => api.post(`/alternative-comparisons/${criteriaId}`, { comparisons }),
-  deleteByCriteria: (criteriaId) => api.delete(`/alternative-comparisons/${criteriaId}`),
+  getBySubCriteria: (subCriteriaId) => api.get(`/alternative-comparisons/${subCriteriaId}`),
+  save: (subCriteriaId, comparisons) => api.post(`/alternative-comparisons/${subCriteriaId}`, { comparisons }),
+  deleteBySubCriteria: (subCriteriaId) => api.delete(`/alternative-comparisons/${subCriteriaId}`),
 };
 
 // Assessment Scores

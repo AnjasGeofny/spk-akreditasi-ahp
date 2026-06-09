@@ -150,11 +150,11 @@ const ahpController = {
   },
 
   /**
-   * Calculate alternative weights for each criteria
+   * Calculate alternative weights for each sub-criteria
    */
   async calculateAlternatives(req, res, next) {
     try {
-      const criteria = await criteriaModel.getAll();
+      const allSubCriteria = await subCriteriaModel.getAll();
       const alternatives = await alternativeModel.getAll();
 
       if (alternatives.length < 2) {
@@ -164,16 +164,23 @@ const ahpController = {
         });
       }
 
+      if (allSubCriteria.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Belum ada sub-kriteria. Tambahkan sub-kriteria terlebih dahulu.',
+        });
+      }
+
       const alternativeIds = alternatives.map((a) => a.id);
       const results = [];
 
-      for (const criterion of criteria) {
-        const comparisons = await alternativeComparisonModel.getMatrix(criterion.id, alternativeIds);
+      for (const sc of allSubCriteria) {
+        const comparisons = await alternativeComparisonModel.getMatrix(sc.id, alternativeIds);
 
         if (comparisons.length === 0) {
           return res.status(400).json({
             success: false,
-            message: `Belum ada data perbandingan alternatif untuk kriteria "${criterion.name}"`,
+            message: `Belum ada data perbandingan alternatif untuk sub-kriteria "${sc.name}"`,
           });
         }
 
@@ -185,10 +192,11 @@ const ahpController = {
 
         const result = ahpService.calculate(mappedComparisons, alternativeIds);
 
-        // Save to database
+        // Save to database with sub_criteria_id
         const saved = await ahpResultModel.save({
           type: 'alternative',
-          criteria_id: criterion.id,
+          criteria_id: sc.criteria_id,
+          sub_criteria_id: sc.id,
           weights: result.weights,
           lambda_max: result.lambda_max,
           ci: result.ci,
@@ -200,14 +208,15 @@ const ahpController = {
 
         results.push({
           id: saved.id,
-          criteria_id: criterion.id,
-          criteria_name: criterion.name,
-          criteria_code: criterion.code,
+          criteria_id: sc.criteria_id,
+          sub_criteria_id: sc.id,
+          sub_criteria_name: sc.name,
+          sub_criteria_code: sc.code,
           ...result,
         });
       }
 
-      successResponse(res, results, 'Perhitungan AHP alternatif berhasil');
+      successResponse(res, results, 'Perhitungan AHP alternatif per sub-kriteria berhasil');
     } catch (error) {
       next(error);
     }
