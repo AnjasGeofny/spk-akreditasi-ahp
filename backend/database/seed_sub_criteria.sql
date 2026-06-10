@@ -14,8 +14,7 @@ ON CONFLICT (code) DO UPDATE SET
   description = EXCLUDED.description,
   order_index = EXCLUDED.order_index;
 
--- Hapus kriteria lama lain (seperti C6 atau C7 dari data bawaan awal) jika ada
-DELETE FROM criteria WHERE code NOT IN ('C1', 'C2', 'C3', 'C4', 'C5');
+-- Sub-kriteria hanya untuk C1-C5, C6 & C7 tidak memiliki sub-kriteria
 
 -- 2. Insert atau Update Sub-Kriteria (SC1.1 - SC5.5)
 INSERT INTO sub_criteria (criteria_id, code, name, description, order_index) VALUES

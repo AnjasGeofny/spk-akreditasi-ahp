@@ -82,17 +82,17 @@ CREATE TABLE sub_criteria_comparisons (
 );
 
 -- ============================================
--- 6. Alternative Comparisons (Alt vs Alt per Criteria)
+-- 6. Alternative Comparisons (Alt vs Alt per Sub-Criteria)
 -- ============================================
 CREATE TABLE alternative_comparisons (
     id SERIAL PRIMARY KEY,
-    criteria_id INTEGER NOT NULL REFERENCES criteria(id) ON DELETE CASCADE,
+    sub_criteria_id INTEGER NOT NULL REFERENCES sub_criteria(id) ON DELETE CASCADE,
     alternative_row_id INTEGER NOT NULL REFERENCES alternatives(id) ON DELETE CASCADE,
     alternative_col_id INTEGER NOT NULL REFERENCES alternatives(id) ON DELETE CASCADE,
     value DOUBLE PRECISION NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(criteria_id, alternative_row_id, alternative_col_id)
+    UNIQUE(sub_criteria_id, alternative_row_id, alternative_col_id)
 );
 
 -- ============================================
@@ -115,6 +115,7 @@ CREATE TABLE ahp_results (
     id SERIAL PRIMARY KEY,
     type VARCHAR(20) NOT NULL CHECK (type IN ('criteria', 'sub_criteria', 'alternative')),
     criteria_id INTEGER REFERENCES criteria(id) ON DELETE CASCADE,
+    sub_criteria_id INTEGER REFERENCES sub_criteria(id) ON DELETE CASCADE,
     weights JSONB NOT NULL,
     lambda_max DOUBLE PRECISION,
     ci DOUBLE PRECISION,
@@ -148,11 +149,12 @@ CREATE INDEX idx_sub_criteria_parent ON sub_criteria(criteria_id);
 CREATE INDEX idx_sub_comp_criteria ON sub_criteria_comparisons(criteria_id);
 CREATE INDEX idx_sub_comp_row ON sub_criteria_comparisons(sub_criteria_row_id);
 CREATE INDEX idx_sub_comp_col ON sub_criteria_comparisons(sub_criteria_col_id);
-CREATE INDEX idx_alt_comp_criteria ON alternative_comparisons(criteria_id);
+CREATE INDEX idx_alt_comp_subcriteria ON alternative_comparisons(sub_criteria_id);
 CREATE INDEX idx_alt_comp_row ON alternative_comparisons(alternative_row_id);
 CREATE INDEX idx_alt_comp_col ON alternative_comparisons(alternative_col_id);
 CREATE INDEX idx_assessment_criteria ON assessment_scores(criteria_id);
 CREATE INDEX idx_assessment_alt ON assessment_scores(alternative_id);
 CREATE UNIQUE INDEX idx_assessment_scores_unique ON assessment_scores (criteria_id, (COALESCE(alternative_id, 0)));
 CREATE INDEX idx_ahp_type ON ahp_results(type);
+CREATE INDEX idx_ahp_sub_criteria ON ahp_results(sub_criteria_id);
 CREATE INDEX idx_accreditation_alt ON accreditation_results(alternative_id);
