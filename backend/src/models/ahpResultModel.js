@@ -1,14 +1,39 @@
 const pool = require('../config/database');
 
 const ahpResultModel = {
+  /**
+   * Save AHP result — upsert: replaces existing result for the same
+   * (type, criteria_id, sub_criteria_id) combination so there are no duplicates.
+   */
   async save(data) {
+    const criteriaId = data.criteria_id || null;
+    const subCriteriaId = data.sub_criteria_id || null;
+
+    // Delete previous result for this exact combination
+    if (subCriteriaId) {
+      await pool.query(
+        `DELETE FROM ahp_results WHERE type = $1 AND sub_criteria_id = $2`,
+        [data.type, subCriteriaId]
+      );
+    } else if (criteriaId) {
+      await pool.query(
+        `DELETE FROM ahp_results WHERE type = $1 AND criteria_id = $2 AND sub_criteria_id IS NULL`,
+        [data.type, criteriaId]
+      );
+    } else {
+      await pool.query(
+        `DELETE FROM ahp_results WHERE type = $1 AND criteria_id IS NULL AND sub_criteria_id IS NULL`,
+        [data.type]
+      );
+    }
+
     const result = await pool.query(
       `INSERT INTO ahp_results (type, criteria_id, sub_criteria_id, weights, lambda_max, ci, cr, is_consistent, normalized_matrix, comparison_matrix)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         data.type,
-        data.criteria_id || null,
-        data.sub_criteria_id || null,
+        criteriaId,
+        subCriteriaId,
         JSON.stringify(data.weights),
         data.lambda_max,
         data.ci,
