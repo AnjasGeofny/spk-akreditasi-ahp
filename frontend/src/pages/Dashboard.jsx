@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { dashboardApi } from '../services/api';
 import Loading from '../components/ui/Loading';
 import { formatPercent } from '../utils/formatters';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
-import { CHART_COLORS } from '../utils/constants';
 
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
@@ -115,58 +113,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Bar Chart - Ranking */}
-        <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Ranking Kesiapan Akreditasi</h3>
-          {rankingData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={rankingData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }}
-                  formatter={(value) => [`${value.toFixed(2)}%`, 'Skor']}
-                />
-                <Bar dataKey="score" radius={[8, 8, 0, 0]}>
-                  {rankingData.map((entry, index) => (
-                    <Bar key={index} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-dark-400 text-sm">
-              <p>Belum ada data ranking. Lakukan perhitungan akreditasi terlebih dahulu.</p>
-            </div>
-          )}
-        </div>
 
-        {/* Radar Chart */}
-        <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Grafik Radar Kesiapan</h3>
-          {rankingData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={rankingData}>
-                <PolarGrid stroke="#334155" />
-                <PolarAngleAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <PolarRadiusAxis tick={{ fill: '#94a3b8', fontSize: 10 }} domain={[0, 100]} />
-                <Radar name="Skor" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
-                <Legend />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-dark-400 text-sm">
-              <p>Belum ada data untuk ditampilkan.</p>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Quick Status */}
       {summary?.overall_status && (

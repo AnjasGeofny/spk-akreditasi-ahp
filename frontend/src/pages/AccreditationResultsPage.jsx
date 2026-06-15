@@ -3,8 +3,6 @@ import { accreditationApi } from '../services/api';
 import { useApp } from '../context/AppContext';
 import Loading from '../components/ui/Loading';
 import { formatPercent, getStatusBadgeClass } from '../utils/formatters';
-import { CHART_COLORS } from '../utils/constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Cell } from 'recharts';
 
 export default function AccreditationResultsPage() {
   const { showNotification } = useApp();
@@ -46,11 +44,7 @@ export default function AccreditationResultsPage() {
 
   const hasAlternatives = results.some((r) => r.alternative_id);
 
-  const chartData = results.map((r, i) => ({
-    name: r.alternative_name || 'Keseluruhan',
-    score: r.readiness_percentage,
-    fill: CHART_COLORS[i % CHART_COLORS.length],
-  }));
+
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -130,39 +124,7 @@ export default function AccreditationResultsPage() {
             </div>
           </div>
 
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Grafik Batang</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                  <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} domain={[0, 100]} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }} formatter={(v) => [`${v.toFixed(2)}%`, 'Skor']} />
-                  <Bar dataKey="score" radius={[8, 8, 0, 0]}>
-                    {chartData.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
 
-            <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Grafik Radar</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={chartData}>
-                  <PolarGrid stroke="#334155" />
-                  <PolarAngleAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <PolarRadiusAxis tick={{ fill: '#94a3b8', fontSize: 10 }} domain={[0, 100]} />
-                  <Radar name="Skor Kesiapan" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
-                  <Legend />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
           {/* Status Legend */}
           <div className="glass-card p-6">
