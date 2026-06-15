@@ -138,7 +138,7 @@ export default function PairwiseComparisonPage() {
           <p>Minimal 2 kriteria diperlukan. Silakan tambahkan kriteria terlebih dahulu.</p>
         </div>
       ) : (
-        <div className="glass-card p-6 overflow-x-auto">
+      <div className="glass-card p-6 overflow-x-auto">
           <h3 className="text-lg font-semibold text-white mb-4">Matriks Perbandingan</h3>
           <table className="w-full">
             <thead>
@@ -157,28 +157,45 @@ export default function PairwiseComparisonPage() {
                   <td className="px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
                     {rowCrit.code} - {rowCrit.name}
                   </td>
-                  {criteria.map((colCrit, j) => (
-                    <td key={colCrit.id} className="px-2 py-2 text-center">
-                      {i === j ? (
-                        <span className="text-dark-500 text-sm">1</span>
-                      ) : i < j ? (
-                        <select
-                          value={matrix[i]?.[j] || 1}
-                          onChange={(e) => handleCellChange(i, j, e.target.value)}
-                          className="w-20 px-2 py-1.5 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white text-center focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
-                        >
-                          {SAATY_SCALE.map((s) => (
-                            <option key={s.value} value={s.value}>{s.value}</option>
-                          ))}
-                          {SAATY_SCALE.filter(s => s.value > 1).map((s) => (
-                            <option key={`1/${s.value}`} value={(1 / s.value).toFixed(4)}>1/{s.value}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-dark-400 text-sm">{matrix[i]?.[j]?.toFixed(4)}</span>
-                      )}
-                    </td>
-                  ))}
+                  {criteria.map((colCrit, j) => {
+                    // Build full option list for upper-triangle cells
+                    const allOptions = [
+                      ...SAATY_SCALE.map((s) => ({ label: String(s.value), numVal: s.value })),
+                      ...SAATY_SCALE.filter((s) => s.value > 1).map((s) => ({
+                        label: `1/${s.value}`,
+                        numVal: 1 / s.value,
+                      })),
+                    ];
+
+                    // Find closest option for current matrix value
+                    const currentVal = matrix[i]?.[j] ?? 1;
+                    const closestOpt = allOptions.reduce((best, opt) =>
+                      Math.abs(opt.numVal - currentVal) < Math.abs(best.numVal - currentVal) ? opt : best
+                    );
+
+                    return (
+                      <td key={colCrit.id} className="px-2 py-2 text-center">
+                        {i === j ? (
+                          <span className="text-dark-500 text-sm">1</span>
+                        ) : i < j ? (
+                          <select
+                            value={closestOpt.label}
+                            onChange={(e) => {
+                              const selected = allOptions.find((o) => o.label === e.target.value);
+                              if (selected) handleCellChange(i, j, selected.numVal);
+                            }}
+                            className="w-20 px-2 py-1.5 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white text-center focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
+                          >
+                            {allOptions.map((opt) => (
+                              <option key={opt.label} value={opt.label}>{opt.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-dark-400 text-sm">{matrix[i]?.[j]?.toFixed(4)}</span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
