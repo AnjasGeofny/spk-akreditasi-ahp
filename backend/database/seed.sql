@@ -18,12 +18,12 @@ ON CONFLICT (code) DO UPDATE SET
   description = EXCLUDED.description,
   order_index = EXCLUDED.order_index;
 
--- Seed Alternatives (14 Program Studi Teknik ITK — sesuai urutan kolom AHP_FIX_KEL_4)
--- A1=Teknik Mesin, A2=Teknik Industri, A3=Rekayasa Logistik,
--- A4=Teknologi Material & Metalurgi, A5=Teknik Kimia, A6=Rekayasa Keselamatan,
+-- Seed Alternatives (14 Program Studi Teknik ITK — sesuai urutan spreadsheet)
+-- A1=Teknik Mesin, A2=Teknik Industri, A3=Teknik Logistik,
+-- A4=Teknik Metalurgi dan Material, A5=Teknik Kimia, A6=Rekayasa Keselamatan,
 -- A7=Teknik Perkapalan, A8=Teknik Kelautan, A9=Teknik Lingkungan,
 -- A10=Teknik Sipil, A11=Teknik Elektro, A12=Teknik Biomedis,
--- A13=Teknologi Transportasi Laut, A14=Teknik Sistem Perkapalan
+-- A13=Transportasi Laut, A14=Sistem Perkapalan
 
 -- Reset alternatives
 DELETE FROM alternatives;
@@ -31,8 +31,8 @@ DELETE FROM alternatives;
 INSERT INTO alternatives (name, code, description) VALUES
 ('Teknik Mesin',                      'A1',  'Program Studi Teknik Mesin'),
 ('Teknik Industri',                   'A2',  'Program Studi Teknik Industri'),
-('Rekayasa Logistik',                 'A3',  'Program Studi Rekayasa Logistik'),
-('Teknologi Material dan Metalurgi',  'A4',  'Program Studi Teknologi Material dan Metalurgi'),
+('Teknik Logistik',                   'A3',  'Program Studi Teknik Logistik'),
+('Teknik Metalurgi dan Material',     'A4',  'Program Studi Teknik Metalurgi dan Material'),
 ('Teknik Kimia',                      'A5',  'Program Studi Teknik Kimia'),
 ('Rekayasa Keselamatan',              'A6',  'Program Studi Rekayasa Keselamatan'),
 ('Teknik Perkapalan',                 'A7',  'Program Studi Teknik Perkapalan'),
@@ -41,8 +41,8 @@ INSERT INTO alternatives (name, code, description) VALUES
 ('Teknik Sipil',                      'A10', 'Program Studi Teknik Sipil'),
 ('Teknik Elektro',                    'A11', 'Program Studi Teknik Elektro'),
 ('Teknik Biomedis',                   'A12', 'Program Studi Teknik Biomedis'),
-('Teknologi Transportasi Laut',       'A13', 'Program Studi Teknologi Transportasi Laut'),
-('Teknik Sistem Perkapalan',          'A14', 'Program Studi Teknik Sistem Perkapalan')
+('Transportasi Laut',                 'A13', 'Program Studi Transportasi Laut'),
+('Sistem Perkapalan',                 'A14', 'Program Studi Sistem Perkapalan')
 ON CONFLICT (code) DO UPDATE SET
   name        = EXCLUDED.name,
   description = EXCLUDED.description;

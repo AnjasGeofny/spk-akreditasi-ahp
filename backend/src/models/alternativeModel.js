@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 const alternativeModel = {
   async getAll() {
-    const result = await pool.query('SELECT * FROM alternatives ORDER BY code ASC');
+    const result = await pool.query('SELECT * FROM alternatives ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER) ASC');
     return result.rows;
   },
 
