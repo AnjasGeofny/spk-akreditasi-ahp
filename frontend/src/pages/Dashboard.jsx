@@ -75,11 +75,8 @@ export default function Dashboard() {
     },
   ];
 
-  const rankingData = summary?.ranking?.map((r, i) => ({
-    name: r.name,
-    score: r.score,
-    fill: CHART_COLORS[i % CHART_COLORS.length],
-  })) || [];
+
+
 
   return (
     <div className="space-y-6 animate-fade-in">
