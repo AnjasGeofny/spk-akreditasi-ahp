@@ -304,31 +304,85 @@ export default function AlternativeComparisonPage() {
       )}
 
       {/* AHP Results */}
-      {ahpResults && (
+      {ahpResults && ahpResults.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-white">Hasil Perhitungan AHP Alternatif per Sub-Kriteria</h3>
           {ahpResults.map((result) => (
-            <div key={result.sub_criteria_id} className="glass-card p-5">
-              <div className="flex items-center justify-between mb-3">
+            <div key={result.sub_criteria_id} className="glass-card p-5 space-y-4">
+              {/* Header */}
+              <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-semibold text-white text-sm">
                     {result.sub_criteria_code} — {result.sub_criteria_name}
                   </h4>
                 </div>
                 <span className={`${result.is_consistent ? 'badge-success' : 'badge-danger'} text-xs`}>
-                  CR: {result.cr?.toFixed(4)} — {result.is_consistent ? 'Konsisten' : 'Tidak Konsisten'}
+                  {result.is_consistent ? '✓ Konsisten' : '✗ Tidak Konsisten'}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(result.weights || {}).map(([altId, weight]) => {
-                  const alt = alternatives.find((a) => a.id === parseInt(altId));
-                  return (
-                    <div key={altId} className="px-3 py-1.5 rounded-lg bg-dark-800/50 text-xs">
-                      <span className="text-dark-400">{alt?.code}: </span>
-                      <span className="text-white font-semibold">{(weight * 100).toFixed(2)}%</span>
-                    </div>
-                  );
-                })}
+
+              {/* Lambda Max, CI, CR, RI Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-2.5 rounded-xl bg-dark-800/50">
+                  <p className="text-[10px] text-dark-400 uppercase tracking-wider">Lambda Max (λmax)</p>
+                  <p className="text-sm font-bold text-white mt-0.5">{result.lambda_max?.toFixed(4)}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-dark-800/50">
+                  <p className="text-[10px] text-dark-400 uppercase tracking-wider">CI</p>
+                  <p className="text-sm font-bold text-white mt-0.5">{result.ci?.toFixed(4)}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-dark-800/50">
+                  <p className="text-[10px] text-dark-400 uppercase tracking-wider">RI</p>
+                  <p className="text-sm font-bold text-white mt-0.5">{result.ri?.toFixed(4)}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-dark-800/50">
+                  <p className="text-[10px] text-dark-400 uppercase tracking-wider">CR</p>
+                  <p className={`text-sm font-bold mt-0.5 ${result.is_consistent ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {result.cr?.toFixed(4)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Weights Table: Decimal + Percentage */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs text-dark-400 font-semibold">Alternatif</th>
+                      <th className="px-3 py-2 text-center text-xs text-dark-400 font-semibold">Bobot (w)</th>
+                      <th className="px-3 py-2 text-center text-xs text-dark-400 font-semibold">Persentase</th>
+                      <th className="px-3 py-2 text-left text-xs text-dark-400 font-semibold">Grafik</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(result.weights || {})
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([altId, weight]) => {
+                        const alt = alternatives.find((a) => a.id === parseInt(altId));
+                        return (
+                          <tr key={altId} className="border-t border-dark-700/20">
+                            <td className="px-3 py-1.5 text-xs text-white font-medium">
+                              {alt?.code} — {alt?.name}
+                            </td>
+                            <td className="px-3 py-1.5 text-center text-xs text-dark-200 font-mono">
+                              {weight?.toFixed(4)}
+                            </td>
+                            <td className="px-3 py-1.5 text-center text-xs text-white font-semibold">
+                              {(weight * 100).toFixed(2)}%
+                            </td>
+                            <td className="px-3 py-1.5">
+                              <div className="w-24 h-2 bg-dark-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"
+                                  style={{ width: `${Math.min(weight * 100 / 0.15 * 1, 100)}%` }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           ))}
