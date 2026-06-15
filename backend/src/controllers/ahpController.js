@@ -251,6 +251,83 @@ const ahpController = {
       next(error);
     }
   },
+
+  /**
+   * Get readiness status for accreditation calculation
+   */
+  async getReadiness(req, res, next) {
+    try {
+      const criteria = await criteriaModel.getAll();
+      const allSubCriteria = await subCriteriaModel.getAll();
+
+      // 1. Check criteria AHP
+      const criteriaResult = await ahpResultModel.getLatestCriteriaResult();
+      const criteriaReady = criteriaResult && criteriaResult.is_consistent;
+
+      // 2. Check sub-criteria AHP per criteria
+      const subCriteriaResults = await ahpResultModel.getLatestSubCriteriaResults();
+      const scResultMap = {};
+      subCriteriaResults.forEach((r) => { scResultMap[r.criteria_id] = r; });
+
+      const subCriteriaStatus = criteria.map((c) => {
+        const result = scResultMap[c.id];
+        return {
+          criteria_id: c.id,
+          criteria_code: c.code,
+          criteria_name: c.name,
+          ready: result ? result.is_consistent : false,
+          cr: result?.cr || null,
+          is_consistent: result?.is_consistent || false,
+          calculated: !!result,
+        };
+      });
+      const allSubCriteriaReady = subCriteriaStatus.every((s) => s.ready);
+
+      // 3. Check alternative AHP per sub-criteria
+      const altResults = await ahpResultModel.getLatestAlternativeResults();
+      const altResultMap = {};
+      altResults.forEach((r) => { altResultMap[r.sub_criteria_id] = r; });
+
+      const alternativeStatus = allSubCriteria.map((sc) => {
+        const result = altResultMap[sc.id];
+        return {
+          sub_criteria_id: sc.id,
+          sub_criteria_code: sc.code,
+          sub_criteria_name: sc.name,
+          criteria_code: sc.criteria_code,
+          ready: result ? result.is_consistent : false,
+          cr: result?.cr || null,
+          is_consistent: result?.is_consistent || false,
+          calculated: !!result,
+        };
+      });
+      const allAlternativesReady = alternativeStatus.every((s) => s.ready);
+
+      const allReady = criteriaReady && allSubCriteriaReady && allAlternativesReady;
+
+      successResponse(res, {
+        all_ready: allReady,
+        criteria: {
+          ready: criteriaReady,
+          calculated: !!criteriaResult,
+          is_consistent: criteriaResult?.is_consistent || false,
+          cr: criteriaResult?.cr || null,
+        },
+        sub_criteria: {
+          all_ready: allSubCriteriaReady,
+          details: subCriteriaStatus,
+        },
+        alternatives: {
+          all_ready: allAlternativesReady,
+          total: allSubCriteria.length,
+          completed: alternativeStatus.filter((s) => s.ready).length,
+          details: alternativeStatus,
+        },
+      }, 'Status kesiapan berhasil dimuat');
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 module.exports = ahpController;

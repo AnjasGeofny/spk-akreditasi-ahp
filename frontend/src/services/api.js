@@ -98,6 +98,7 @@ export const ahpApi = {
   calculateCriteria: () => api.post('/ahp/calculate-criteria', {}),
   calculateSubCriteria: (criteriaId) => api.post(`/ahp/calculate-sub-criteria/${criteriaId}`, {}),
   calculateAlternatives: () => api.post('/ahp/calculate-alternatives', {}),
+  getReadiness: () => api.get('/ahp/readiness'),
   getResults: () => api.get('/ahp/results'),
   getResultById: (id) => api.get(`/ahp/results/${id}`),
 };

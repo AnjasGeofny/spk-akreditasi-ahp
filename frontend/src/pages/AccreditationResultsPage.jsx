@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { accreditationApi } from '../services/api';
+import { accreditationApi, ahpApi } from '../services/api';
 import { useApp } from '../context/AppContext';
 import Loading from '../components/ui/Loading';
 import { formatPercent, getStatusBadgeClass } from '../utils/formatters';
@@ -7,16 +7,22 @@ import { formatPercent, getStatusBadgeClass } from '../utils/formatters';
 export default function AccreditationResultsPage() {
   const { showNotification } = useApp();
   const [results, setResults] = useState([]);
+  const [readiness, setReadiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [calcError, setCalcError] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
-      const res = await accreditationApi.getLatest();
-      setResults(res.data);
+      const [accRes, readyRes] = await Promise.all([
+        accreditationApi.getLatest(),
+        ahpApi.getReadiness(),
+      ]);
+      setResults(accRes.data);
+      setReadiness(readyRes.data);
     } catch (err) {
       showNotification(err.message, 'error');
     } finally {
@@ -44,7 +50,40 @@ export default function AccreditationResultsPage() {
 
   const hasAlternatives = results.some((r) => r.alternative_id);
 
+  // Icons
+  const CheckIcon = () => (
+    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+  const CrossIcon = () => (
+    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+  const PendingIcon = () => (
+    <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
 
+  const getStepIcon = (ready, calculated) => {
+    if (ready) return <CheckIcon />;
+    if (calculated) return <CrossIcon />;
+    return <PendingIcon />;
+  };
+
+  const getStepLabel = (ready, calculated) => {
+    if (ready) return 'Siap';
+    if (calculated) return 'Tidak Konsisten';
+    return 'Belum Dihitung';
+  };
+
+  const getStepClass = (ready, calculated) => {
+    if (ready) return 'border-emerald-500/30 bg-emerald-500/5';
+    if (calculated) return 'border-red-500/30 bg-red-500/5';
+    return 'border-amber-500/30 bg-amber-500/5';
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -54,8 +93,6 @@ export default function AccreditationResultsPage() {
           <p className="text-dark-400 mt-1">Nilai kesiapan dan ranking program studi</p>
         </div>
         <div className="flex gap-3">
-          {/* Button tanpa alternatif disembunyikan — tidak dibutuhkan */}
-          {/* <button onClick={() => handleCalculate('without_alternatives')} ... /> */}
           <button onClick={() => handleCalculate('with_alternatives')} disabled={calculating} className="btn-primary" id="calc-with-alt">
             {calculating ? (
               <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Menghitung...</span>
@@ -63,6 +100,116 @@ export default function AccreditationResultsPage() {
           </button>
         </div>
       </div>
+
+      {/* Readiness Indicator */}
+      {readiness && (
+        <div className="glass-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Indikator Kesiapan Data</h3>
+            {readiness.all_ready ? (
+              <span className="badge-success text-xs">✓ Semua Siap</span>
+            ) : (
+              <span className="badge-warning text-xs">Belum Lengkap</span>
+            )}
+          </div>
+
+          {/* 3 Main Steps */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Step 1: Criteria */}
+            <div className={`p-4 rounded-xl border ${getStepClass(readiness.criteria.ready, readiness.criteria.calculated)}`}>
+              <div className="flex items-center gap-3">
+                {getStepIcon(readiness.criteria.ready, readiness.criteria.calculated)}
+                <div>
+                  <p className="text-sm font-semibold text-white">Bobot Kriteria</p>
+                  <p className="text-xs text-dark-400 mt-0.5">
+                    {readiness.criteria.ready
+                      ? `CR: ${readiness.criteria.cr?.toFixed(4)}`
+                      : getStepLabel(readiness.criteria.ready, readiness.criteria.calculated)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Sub-Criteria */}
+            <div className={`p-4 rounded-xl border ${getStepClass(readiness.sub_criteria.all_ready, readiness.sub_criteria.details.some(s => s.calculated))}`}>
+              <div className="flex items-center gap-3">
+                {getStepIcon(readiness.sub_criteria.all_ready, readiness.sub_criteria.details.some(s => s.calculated))}
+                <div>
+                  <p className="text-sm font-semibold text-white">Bobot Sub-Kriteria</p>
+                  <p className="text-xs text-dark-400 mt-0.5">
+                    {readiness.sub_criteria.details.filter(s => s.ready).length}/{readiness.sub_criteria.details.length} kriteria siap
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Alternatives */}
+            <div className={`p-4 rounded-xl border ${getStepClass(readiness.alternatives.all_ready, readiness.alternatives.completed > 0)}`}>
+              <div className="flex items-center gap-3">
+                {getStepIcon(readiness.alternatives.all_ready, readiness.alternatives.completed > 0)}
+                <div>
+                  <p className="text-sm font-semibold text-white">Bobot Alternatif</p>
+                  <p className="text-xs text-dark-400 mt-0.5">
+                    {readiness.alternatives.completed}/{readiness.alternatives.total} sub-kriteria siap
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle Detail */}
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-xs text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+          >
+            <svg className={`w-3 h-3 transition-transform ${showDetails ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            {showDetails ? 'Sembunyikan detail' : 'Lihat detail per kriteria'}
+          </button>
+
+          {/* Detail Breakdown */}
+          {showDetails && (
+            <div className="mt-4 space-y-3">
+              {/* Sub-Criteria Detail */}
+              <div>
+                <p className="text-xs font-semibold text-dark-300 uppercase tracking-wider mb-2">Detail Bobot Sub-Kriteria</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {readiness.sub_criteria.details.map((s) => (
+                    <div key={s.criteria_id} className="flex items-center gap-2 p-2 rounded-lg bg-dark-800/50">
+                      {s.ready ? <CheckIcon /> : s.calculated ? <CrossIcon /> : <PendingIcon />}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-white font-medium truncate">{s.criteria_code} — {s.criteria_name}</p>
+                        <p className="text-[10px] text-dark-400">
+                          {s.ready ? `CR: ${s.cr?.toFixed(4)}` : getStepLabel(s.ready, s.calculated)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Alternative Detail */}
+              <div>
+                <p className="text-xs font-semibold text-dark-300 uppercase tracking-wider mb-2">Detail Bobot Alternatif per Sub-Kriteria</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {readiness.alternatives.details.map((a) => (
+                    <div key={a.sub_criteria_id} className="flex items-center gap-2 p-2 rounded-lg bg-dark-800/50">
+                      {a.ready ? <CheckIcon /> : a.calculated ? <CrossIcon /> : <PendingIcon />}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-white font-medium truncate">{a.sub_criteria_code} — {a.sub_criteria_name}</p>
+                        <p className="text-[10px] text-dark-400">
+                          {a.ready ? `CR: ${a.cr?.toFixed(4)}` : getStepLabel(a.ready, a.calculated)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {calcError && (
         <div className="glass-card p-4 border border-red-500/30 bg-red-500/10">
@@ -123,8 +270,6 @@ export default function AccreditationResultsPage() {
               </table>
             </div>
           </div>
-
-
 
           {/* Status Legend */}
           <div className="glass-card p-6">
