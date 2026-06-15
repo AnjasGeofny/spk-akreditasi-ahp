@@ -2,17 +2,16 @@
 -- SPK Akreditasi AHP - Seed Data
 -- ============================================
 
--- Seed Criteria (7 Kriteria LAM Teknik Baru)
-DELETE FROM criteria WHERE code NOT IN ('C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7');
+-- Seed Criteria (5 Kriteria AHP Akreditasi)
+-- Hapus kriteria yang tidak dipakai (C6, C7 jika ada)
+DELETE FROM criteria WHERE code IN ('C6', 'C7');
 
 INSERT INTO criteria (name, code, description, order_index) VALUES
-('Diferensiasi Misi', 'C1', 'Kriteria diferensiasi misi program studi', 1),
-('Akuntabilitas', 'C2', 'Kriteria akuntabilitas program studi', 2),
-('Relevansi Pendidikan, Penelitian & PkM', 'C3', 'Kriteria relevansi tridharma perguruan tinggi', 3),
-('Sumber Daya Manusia', 'C4', 'Kriteria dosen, tenaga kependidikan dan pendukung akademik', 4),
-('Sarana, Prasarana & K3L', 'C5', 'Kriteria sarana, prasarana dan keselamatan, kesehatan, kerja & lingkungan', 5),
-('Mahasiswa & Luaran', 'C6', 'Kriteria mahasiswa dan luaran tridharma', 6),
-('Sistem Penjaminan Mutu', 'C7', 'Kriteria sistem penjaminan mutu internal dan eksternal', 7)
+('Diferensiasi Misi',    'C1', 'Kriteria diferensiasi misi program studi', 1),
+('Akuntabilitas',        'C2', 'Kriteria akuntabilitas program studi', 2),
+('Relevansi Pendidikan', 'C3', 'Kriteria relevansi pendidikan, penelitian & PkM', 3),
+('Sumber Daya Manusia',  'C4', 'Kriteria dosen, tenaga kependidikan dan pendukung akademik', 4),
+('Mahasiswa & Luaran',   'C5', 'Kriteria mahasiswa dan luaran tridharma', 5)
 ON CONFLICT (code) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,

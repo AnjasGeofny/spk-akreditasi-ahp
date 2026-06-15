@@ -17,13 +17,21 @@ export default function PairwiseComparisonPage() {
 
   const loadData = async () => {
     try {
-      const [critRes, compRes] = await Promise.all([
+      const [critRes, compRes, ahpResultsRes] = await Promise.all([
         criteriaApi.getAll(),
         pairwiseApi.getAll(),
+        ahpApi.getResults(),
       ]);
       const crits = critRes.data;
       setCriteria(crits);
       initializeMatrix(crits, compRes.data);
+
+      // Load latest criteria AHP result if available
+      const criteriaResult = (ahpResultsRes.data || []).find((r) => r.type === 'criteria');
+      if (criteriaResult) {
+        const detail = await ahpApi.getResultById(criteriaResult.id);
+        setAhpResult(detail.data);
+      }
     } catch (err) {
       showNotification(err.message, 'error');
     } finally {

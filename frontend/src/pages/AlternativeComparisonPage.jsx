@@ -21,10 +21,11 @@ export default function AlternativeComparisonPage() {
 
   const loadInitialData = async () => {
     try {
-      const [critRes, altRes, allScRes] = await Promise.all([
+      const [critRes, altRes, allScRes, ahpResultsRes] = await Promise.all([
         criteriaApi.getAll(),
         alternativesApi.getAll(),
         subCriteriaApi.getAll(),
+        ahpApi.getResults(),
       ]);
 
       const critList = critRes.data || [];
@@ -41,6 +42,12 @@ export default function AlternativeComparisonPage() {
       setCriteria(critList);
       setSubCriteriaMap(scMap);
       setAlternatives(altList);
+
+      // Load latest alternative AHP results if available
+      const altAhpResults = (ahpResultsRes.data || []).filter((r) => r.type === 'alternative');
+      if (altAhpResults.length > 0) {
+        setAhpResults(altAhpResults);
+      }
 
       // Auto-select first criteria and first sub-criteria
       if (critList.length > 0) {
