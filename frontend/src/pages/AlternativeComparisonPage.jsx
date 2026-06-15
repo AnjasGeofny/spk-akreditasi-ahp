@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { criteriaApi, subCriteriaApi, alternativesApi, altComparisonApi, ahpApi } from '../services/api';
 import { useApp } from '../context/AppContext';
+import { sortByCode } from '../utils/formatters';
 import Loading from '../components/ui/Loading';
 
 export default function AlternativeComparisonPage() {
@@ -27,7 +28,7 @@ export default function AlternativeComparisonPage() {
       ]);
 
       const critList = critRes.data || [];
-      const altList = altRes.data || [];
+      const altList = sortByCode(altRes.data || []);
       const allSc = allScRes.data || [];
 
       // Group sub-criteria by criteria_id

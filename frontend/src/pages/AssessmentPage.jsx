@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { criteriaApi, alternativesApi, assessmentApi } from '../services/api';
 import { useApp } from '../context/AppContext';
+import { sortByCode } from '../utils/formatters';
 import Loading from '../components/ui/Loading';
 
 export default function AssessmentPage() {
@@ -22,7 +23,7 @@ export default function AssessmentPage() {
         assessmentApi.getAll(),
       ]);
       setCriteria(critRes.data);
-      setAlternatives(altRes.data);
+      setAlternatives(sortByCode(altRes.data));
 
       // Initialize scores from existing data
       const existing = {};

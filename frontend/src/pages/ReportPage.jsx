@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ahpApi, accreditationApi, criteriaApi, alternativesApi } from '../services/api';
 import { useApp } from '../context/AppContext';
+import { sortByCode } from '../utils/formatters';
 import Loading from '../components/ui/Loading';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -27,7 +28,7 @@ export default function ReportPage() {
       setAhpResults(ahpRes.data);
       setAccResults(accRes.data);
       setCriteria(critRes.data);
-      setAlternatives(altRes.data);
+      setAlternatives(sortByCode(altRes.data));
     } catch (err) {
       showNotification(err.message, 'error');
     } finally {

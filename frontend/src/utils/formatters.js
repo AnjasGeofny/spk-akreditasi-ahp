@@ -21,3 +21,14 @@ export const getStatusBadgeClass = (status) => {
 export const getConsistencyBadge = (isConsistent) => {
   return isConsistent ? 'badge-success' : 'badge-danger';
 };
+
+/**
+ * Sort array by numeric part of code (e.g. A1, A2, ..., A10, A14)
+ */
+export const sortByCode = (list) => {
+  return [...list].sort((a, b) => {
+    const numA = parseInt(a.code.replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(b.code.replace(/\D/g, ''), 10) || 0;
+    return numA - numB;
+  });
+};

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { alternativesApi } from '../services/api';
+import { sortByCode } from '../utils/formatters';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/ui/Modal';
 import Loading from '../components/ui/Loading';
@@ -18,7 +19,7 @@ export default function AlternativesPage() {
   const loadData = async () => {
     try {
       const res = await alternativesApi.getAll();
-      setAlternatives(res.data);
+      setAlternatives(sortByCode(res.data));
     } catch (err) {
       showNotification(err.message, 'error');
     } finally {
