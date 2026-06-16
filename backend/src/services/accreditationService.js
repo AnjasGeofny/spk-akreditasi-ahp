@@ -104,8 +104,14 @@ const accreditationService = {
       alternativeIds
     );
 
-    // 5b. Use raw AHP scores directly (decimal values summing to ~1.0)
-    const results = rawResults;
+    // 5b. Keep final_score as raw AHP decimal, normalize readiness_percentage to 0-100
+    // Equal share = 1/n. Mapping: equal_share → 50, so formula: (score / equalShare) * 50
+    const nAlt = alternativeIds.length;
+    const equalShare = 1 / nAlt;
+    const results = rawResults.map((r) => ({
+      ...r,
+      readiness_percentage: Math.min(100, Math.round((r.final_score / equalShare) * 50 * 100) / 100),
+    }));
 
     // 6. Clear previous results then save fresh batch
     await accreditationResultModel.deleteAll();
