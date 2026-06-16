@@ -104,18 +104,8 @@ const accreditationService = {
       alternativeIds
     );
 
-    // 5b. Normalize scores to 0-100 scale.
-    // In AHP, all alternative weights sum to 100 (across n_alt alternatives),
-    // so equal-share baseline = 100 / n_alt. We map that baseline to 50,
-    // giving scores in a meaningful 0-100 range.
-    const nAlt = alternativeIds.length;
-    const equalShare = 100 / nAlt; // e.g. 7.14 for 14 alternatives
-    const results = rawResults.map((r) => ({
-      ...r,
-      raw_score: r.final_score,
-      final_score: Math.min(100, Math.round((r.final_score / equalShare) * 50 * 100) / 100),
-      readiness_percentage: Math.min(100, Math.round((r.readiness_percentage / equalShare) * 50 * 100) / 100),
-    }));
+    // 5b. Use raw AHP scores directly (decimal values summing to ~1.0)
+    const results = rawResults;
 
     // 6. Clear previous results then save fresh batch
     await accreditationResultModel.deleteAll();

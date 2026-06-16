@@ -226,46 +226,54 @@ export default function AccreditationResultsPage() {
           {/* Results Table */}
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-4">
-              {hasAlternatives ? 'Ranking Kesiapan Akreditasi' : 'Nilai Kesiapan Akreditasi'}
+              Ranking Akreditasi Program Studi
             </h3>
             <div className="table-container">
               <table className="w-full">
                 <thead>
                   <tr className="table-header">
-                    {hasAlternatives && <th className="px-5 py-3 text-center">Rank</th>}
-                    <th className="px-5 py-3 text-left">{hasAlternatives ? 'Program Studi' : 'Keterangan'}</th>
-                    <th className="px-5 py-3 text-center">Nilai Akhir</th>
-                    <th className="px-5 py-3 text-center">Persentase</th>
-                    <th className="px-5 py-3 text-center">Status</th>
+                    <th className="px-5 py-3 text-center">Ranking</th>
+                    <th className="px-5 py-3 text-left">Program Studi</th>
+                    <th className="px-5 py-3 text-center">Skor Akhir</th>
+                    <th className="px-5 py-3 text-left">Grafik</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r, i) => (
-                    <tr key={r.id} className="table-row">
-                      {hasAlternatives && (
+                  {results.map((r, i) => {
+                    const maxScore = results.length > 0 ? results[0].final_score : 1;
+                    const barWidth = maxScore > 0 ? (r.final_score / maxScore) * 100 : 0;
+                    return (
+                      <tr key={r.id} className="table-row">
                         <td className="px-5 py-3 text-center">
                           <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                            i === 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-dark-700 text-dark-300'
+                            i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                            i === 1 ? 'bg-slate-300/20 text-slate-300' :
+                            i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                            'bg-dark-700 text-dark-300'
                           }`}>
                             {i + 1}
                           </span>
                         </td>
-                      )}
-                      <td className="px-5 py-3 text-white font-medium">{r.alternative_name || 'Penilaian Keseluruhan'}</td>
-                      <td className="px-5 py-3 text-center text-white font-semibold">{r.final_score?.toFixed(2)}</td>
-                      <td className="px-5 py-3 text-center">
-                        <div className="flex items-center gap-2 justify-center">
-                          <div className="w-20 h-2 bg-dark-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full" style={{ width: `${Math.min(r.readiness_percentage, 100)}%` }} />
+                        <td className="px-5 py-3 text-white font-medium">{r.alternative_name || 'Penilaian Keseluruhan'}</td>
+                        <td className="px-5 py-3 text-center">
+                          <span className="text-white font-mono font-semibold text-sm">{r.final_score?.toFixed(4)}</span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="w-40 h-3 bg-dark-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                i === 0 ? 'bg-gradient-to-r from-amber-500 to-amber-400' :
+                                i === 1 ? 'bg-gradient-to-r from-slate-400 to-slate-300' :
+                                i === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-400' :
+                                'bg-gradient-to-r from-primary-500 to-primary-600'
+                              }`}
+                              style={{ width: `${barWidth}%` }}
+                            />
                           </div>
-                          <span className="text-sm text-dark-200">{formatPercent(r.readiness_percentage)}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-center">
-                        <span className={getStatusBadgeClass(r.status)}>{r.status}</span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

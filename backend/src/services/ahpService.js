@@ -269,7 +269,7 @@ const ahpService = {
         for (const [scIdStr, scLocalWeight] of Object.entries(subWeights)) {
           const scId = parseInt(scIdStr);
           const altWeight = alternativeWeights[scId]?.[altId] || 0;
-          const contribution = roundTo(criteriaWeight * scLocalWeight * altWeight * 100, 6);
+          const contribution = roundTo(criteriaWeight * scLocalWeight * altWeight, 6);
           criteriaContribution += contribution;
 
           details.push({
