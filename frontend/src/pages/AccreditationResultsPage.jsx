@@ -235,14 +235,11 @@ export default function AccreditationResultsPage() {
                     <th className="px-5 py-3 text-center">Ranking</th>
                     <th className="px-5 py-3 text-left">Program Studi</th>
                     <th className="px-5 py-3 text-center">Skor Akhir</th>
-                    <th className="px-5 py-3 text-left">Grafik</th>
+
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r, i) => {
-                    const maxScore = results.length > 0 ? results[0].final_score : 1;
-                    const barWidth = maxScore > 0 ? (r.final_score / maxScore) * 100 : 0;
-                    return (
+                  {results.map((r, i) => (
                       <tr key={r.id} className="table-row">
                         <td className="px-5 py-3 text-center">
                           <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
@@ -258,22 +255,8 @@ export default function AccreditationResultsPage() {
                         <td className="px-5 py-3 text-center">
                           <span className="text-white font-mono font-semibold text-sm">{r.final_score?.toFixed(4)}</span>
                         </td>
-                        <td className="px-5 py-3">
-                          <div className="w-40 h-3 bg-dark-700 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                i === 0 ? 'bg-gradient-to-r from-amber-500 to-amber-400' :
-                                i === 1 ? 'bg-gradient-to-r from-slate-400 to-slate-300' :
-                                i === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-400' :
-                                'bg-gradient-to-r from-primary-500 to-primary-600'
-                              }`}
-                              style={{ width: `${barWidth}%` }}
-                            />
-                          </div>
-                        </td>
                       </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>
