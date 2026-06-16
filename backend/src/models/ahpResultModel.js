@@ -63,8 +63,49 @@ const ahpResultModel = {
   },
 
   async getById(id) {
-    const result = await pool.query('SELECT * FROM ahp_results WHERE id = $1', [id]);
-    return result.rows[0] || null;
+    const result = await pool.query(
+      `SELECT ar.*,
+              c.name as criteria_name, c.code as criteria_code,
+              sc.name as sub_criteria_name, sc.code as sub_criteria_code
+       FROM ahp_results ar
+       LEFT JOIN criteria c ON ar.criteria_id = c.id
+       LEFT JOIN sub_criteria sc ON ar.sub_criteria_id = sc.id
+       WHERE ar.id = $1`,
+      [id]
+    );
+    const row = result.rows[0] || null;
+    if (!row) return null;
+
+    // Resolve weight keys (IDs) to readable names
+    const weightIds = Object.keys(row.weights || {}).map(Number);
+    let weightNames = {};
+
+    if (weightIds.length > 0) {
+      const placeholders = weightIds.map((_, i) => `$${i + 1}`).join(',');
+
+      if (row.type === 'criteria') {
+        const names = await pool.query(
+          `SELECT id, name, code FROM criteria WHERE id IN (${placeholders}) ORDER BY order_index ASC`,
+          weightIds
+        );
+        names.rows.forEach((r) => { weightNames[r.id] = { name: r.name, code: r.code }; });
+      } else if (row.type === 'sub_criteria') {
+        const names = await pool.query(
+          `SELECT id, name, code FROM sub_criteria WHERE id IN (${placeholders}) ORDER BY order_index ASC, id ASC`,
+          weightIds
+        );
+        names.rows.forEach((r) => { weightNames[r.id] = { name: r.name, code: r.code }; });
+      } else if (row.type === 'alternative') {
+        const names = await pool.query(
+          `SELECT id, name, code FROM alternatives WHERE id IN (${placeholders}) ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER) ASC`,
+          weightIds
+        );
+        names.rows.forEach((r) => { weightNames[r.id] = { name: r.name, code: r.code }; });
+      }
+    }
+
+    row.weight_names = weightNames;
+    return row;
   },
 
   async getAll() {

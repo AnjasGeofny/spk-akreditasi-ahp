@@ -13,7 +13,10 @@ export default function AhpResultsPage() {
     try {
       const res = await ahpApi.getResults();
       setResults(res.data);
-      if (res.data.length > 0) setSelected(res.data[0]);
+      if (res.data.length > 0) {
+        const detail = await ahpApi.getResultById(res.data[0].id);
+        setSelected(detail.data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -34,8 +37,12 @@ export default function AhpResultsPage() {
 
   const getResultLabel = (result) => {
     if (result.type === 'criteria') return 'Kriteria';
-    if (result.type === 'sub_criteria') return `Sub-Kriteria - ${result.criteria_name || ''}`;
-    return `Alternatif - ${result.criteria_name || ''}`;
+    if (result.type === 'sub_criteria') {
+      const code = result.criteria_code ? `[${result.criteria_code}]` : '';
+      return `Sub-Kriteria ${code} ${result.criteria_name || ''}`;
+    }
+    const scCode = result.sub_criteria_code ? `[${result.sub_criteria_code}]` : '';
+    return `Alternatif ${scCode} ${result.sub_criteria_name || result.criteria_name || ''}`;
   };
 
   const getDetailTitle = (result) => {
@@ -114,18 +121,24 @@ export default function AhpResultsPage() {
                 <div className="glass-card p-6">
                   <h3 className="text-sm font-semibold text-dark-300 mb-3">Bobot (Priority Vector)</h3>
                   <div className="space-y-2">
-                    {Object.entries(selected.weights || {}).map(([id, weight]) => (
-                      <div key={id} className="flex items-center gap-3">
-                        <span className="text-sm text-dark-400 w-16">ID {id}</span>
-                        <div className="flex-1 h-3 bg-dark-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500"
-                            style={{ width: `${(weight || 0) * 100}%` }}
-                          />
+                    {Object.entries(selected.weights || {}).map(([id, weight]) => {
+                      const nameInfo = selected.weight_names?.[id];
+                      const label = nameInfo
+                        ? `${nameInfo.code} - ${nameInfo.name}`
+                        : `ID ${id}`;
+                      return (
+                        <div key={id} className="flex items-center gap-3">
+                          <span className="text-sm text-dark-300 w-48 truncate" title={label}>{label}</span>
+                          <div className="flex-1 h-3 bg-dark-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500"
+                              style={{ width: `${(weight || 0) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-white w-20 text-right">{(weight * 100).toFixed(2)}%</span>
                         </div>
-                        <span className="text-sm font-semibold text-white w-20 text-right">{(weight * 100).toFixed(2)}%</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
