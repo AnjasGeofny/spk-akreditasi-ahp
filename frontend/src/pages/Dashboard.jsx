@@ -48,17 +48,7 @@ export default function Dashboard() {
       gradient: 'from-violet-500 to-violet-700',
       shadowColor: 'shadow-violet-500/25',
     },
-    {
-      title: 'Nilai Kesiapan',
-      value: summary?.overall_readiness != null ? formatPercent(summary.overall_readiness) : '-',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
-      ),
-      gradient: 'from-emerald-500 to-emerald-700',
-      shadowColor: 'shadow-emerald-500/25',
-    },
+
     {
       title: 'Status Konsistensi',
       value: summary?.ahp_consistency
@@ -93,7 +83,7 @@ export default function Dashboard() {
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {statCards.map((card, i) => (
           <div key={i} className="glass-card p-5 animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
             <div className="flex items-start justify-between">
@@ -112,26 +102,7 @@ export default function Dashboard() {
 
 
 
-      {/* Quick Status */}
-      {summary?.overall_status && (
-        <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-3">Status Kesiapan Keseluruhan</h3>
-          <div className="flex items-center gap-4">
-            <div className={`px-6 py-3 rounded-xl text-lg font-bold ${
-              summary.overall_status === 'Sangat Siap' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-              summary.overall_status === 'Siap' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-              summary.overall_status === 'Cukup Siap' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-              'bg-red-500/20 text-red-400 border border-red-500/30'
-            }`}>
-              {summary.overall_status}
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{formatPercent(summary.overall_readiness)}</p>
-              <p className="text-xs text-dark-400">Persentase Kesiapan</p>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
