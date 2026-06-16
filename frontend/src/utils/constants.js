@@ -32,5 +32,4 @@ export const NAV_ITEMS = [
   // { path: '/assessment', label: 'Penilaian', icon: 'assessment' },
   { path: '/ahp-results', label: 'Hasil AHP', icon: 'ahp' },
   { path: '/accreditation', label: 'Hasil Akreditasi', icon: 'accreditation' },
-  { path: '/report', label: 'Laporan', icon: 'report' },
 ];

@@ -9,7 +9,6 @@ import AlternativeComparisonPage from '../pages/AlternativeComparisonPage';
 // import AssessmentPage from '../pages/AssessmentPage';
 import AhpResultsPage from '../pages/AhpResultsPage';
 import AccreditationResultsPage from '../pages/AccreditationResultsPage';
-import ReportPage from '../pages/ReportPage';
 
 export default function AppRoutes() {
   return (
@@ -24,7 +23,6 @@ export default function AppRoutes() {
         {/* <Route path="/assessment" element={<AssessmentPage />} /> */}
         <Route path="/ahp-results" element={<AhpResultsPage />} />
         <Route path="/accreditation" element={<AccreditationResultsPage />} />
-        <Route path="/report" element={<ReportPage />} />
       </Route>
     </Routes>
   );
