@@ -232,11 +232,10 @@ export default function AccreditationResultsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="table-header">
-                    <th className="px-4 py-3 text-center">Ranking</th>
-                    <th className="px-4 py-3 text-left">Program Studi</th>
-                    <th className="px-4 py-3 text-center">Skor Akhir</th>
-                    <th className="px-4 py-3 text-center">Persentase</th>
-                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-5 py-3 text-center">Ranking</th>
+                    <th className="px-5 py-3 text-left">Program Studi</th>
+                    <th className="px-5 py-3 text-center">Skor Akhir</th>
+                    <th className="px-5 py-3 text-left">Grafik</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,7 +244,7 @@ export default function AccreditationResultsPage() {
                     const barWidth = maxScore > 0 ? (r.final_score / maxScore) * 100 : 0;
                     return (
                       <tr key={r.id} className="table-row">
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-5 py-3 text-center">
                           <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
                             i === 0 ? 'bg-amber-500/20 text-amber-400' :
                             i === 1 ? 'bg-slate-300/20 text-slate-300' :
@@ -255,23 +254,22 @@ export default function AccreditationResultsPage() {
                             {i + 1}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-white font-medium">{r.alternative_name || 'Penilaian Keseluruhan'}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-5 py-3 text-white font-medium">{r.alternative_name || 'Penilaian Keseluruhan'}</td>
+                        <td className="px-5 py-3 text-center">
                           <span className="text-white font-mono font-semibold text-sm">{r.final_score?.toFixed(4)}</span>
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center gap-2 justify-center">
-                            <div className="w-16 h-2 bg-dark-700 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"
-                                style={{ width: `${Math.min(r.readiness_percentage, 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-dark-200 font-mono">{formatPercent(r.readiness_percentage)}</span>
+                        <td className="px-5 py-3">
+                          <div className="w-40 h-3 bg-dark-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                i === 0 ? 'bg-gradient-to-r from-amber-500 to-amber-400' :
+                                i === 1 ? 'bg-gradient-to-r from-slate-400 to-slate-300' :
+                                i === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-400' :
+                                'bg-gradient-to-r from-primary-500 to-primary-600'
+                              }`}
+                              style={{ width: `${barWidth}%` }}
+                            />
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={getStatusBadgeClass(r.status)}>{r.status}</span>
                         </td>
                       </tr>
                     );
@@ -279,25 +277,6 @@ export default function AccreditationResultsPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Status Legend */}
-          <div className="glass-card p-6">
-            <h3 className="text-sm font-semibold text-dark-300 mb-3">Kategori Status Kesiapan Akreditasi</h3>
-            <div className="flex flex-wrap gap-4">
-              {[
-                { range: '70-100', label: 'Sangat Siap', cls: 'badge-success' },
-                { range: '55-69', label: 'Siap', cls: 'badge-info' },
-                { range: '40-54', label: 'Cukup Siap', cls: 'badge-warning' },
-                { range: '<40', label: 'Belum Siap', cls: 'badge-danger' },
-              ].map((s) => (
-                <div key={s.label} className="flex items-center gap-2">
-                  <span className={s.cls}>{s.label}</span>
-                  <span className="text-xs text-dark-400">{s.range}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-dark-500 mt-3">* Skor dinormalisasi dari bobot AHP. Rata-rata program studi ≈ 50.</p>
           </div>
         </>
       )}
